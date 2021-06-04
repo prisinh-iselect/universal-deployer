@@ -100,7 +100,7 @@ with open(CF_TEMPLATE) as f:
 with open(CF_POLICY) as p:
     cf_policy = p.read()
 
-for account_id, attr in iselect_accounts("test_accounts.txt").accounts.items():
+for account_id, attr in iselect_accounts().accounts.items():
     print(account_id, attr)
     session = iselect_session(account_id)
     deploy_stack(

@@ -5,7 +5,7 @@ from typing import Any
 class iselect_session:
 
     _role_session_name = "SecurityAssumeRoleSession"
-    _role_name = "OrganizationAccountAccessRole"
+    _role_name = "SecurityAccountAccessRole"
 
     def __init__(self, account_id, role_name=""):
         self.aws_account = account_id
