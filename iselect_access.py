@@ -6,13 +6,16 @@ class iselect_session:
 
     _role_session_name = "SecurityAssumeRoleSession"
     _role_name = "SecurityAccountAccessRole"
+    # ignore 'security' and 'audit' accounts. Changes need to be done manually
+    # to these accounts.
+    _ignore_account_ids = ['831840826019', '179730087721']
 
     def __init__(self, account_id, role_name=""):
         self.aws_account = account_id
+        if(self.aws_account not in self._ignore_account_ids):
+            self.session()
         if role_name:
             self._role_name = role_name
-        self.session()
-        self.cf_client()
 
     def session(self):
         sts_client = boto3.client("sts")
@@ -21,23 +24,31 @@ class iselect_session:
             RoleSessionName=self._role_session_name,
         )
 
-    def cf_client(self):
-        creds = self.assumed_role_obj["Credentials"]
-        self.cf_client = boto3.client(
-            "cloudformation",
-            aws_access_key_id=creds["AccessKeyId"],
-            aws_secret_access_key=creds["SecretAccessKey"],
-            aws_session_token=creds["SessionToken"],
-        )
+    def client(self, boto_service='cloudformation'):
+        if(self.aws_account in self._ignore_account_ids):
+            self.client = boto3.client(boto_service)
+        else:
+            creds = self.assumed_role_obj["Credentials"]
+            self.client = boto3.client(
+                boto_service,
+                aws_access_key_id=creds["AccessKeyId"],
+                aws_secret_access_key=creds["SecretAccessKey"],
+                aws_session_token=creds["SessionToken"],
+            )
+        return self.client
 
 
 class iselect_accounts:
 
-    _accounts_file = "active_accounts.txt"
+    _accounts_file = "test_accounts.txt"
     default_key = "ACTIVE"
     accounts: dict[str, Any] = dict()
 
     def __init__(self, accounts_file=""):
+        """
+        Accepts accounts_file argument. Pass the name of the file including the
+        whole path, if not in the same directory.
+        """
         if accounts_file:
             self._accounts_file = accounts_file
         self.load_accounts()

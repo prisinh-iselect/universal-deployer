@@ -65,7 +65,6 @@ def deploy_stack(
     except ClientError as e:
         if(e.response['Error']['Code'] == "ValidationError"):
             print(f"Stack exists, error with Validation : {e}")
-            return False
         else:
             print(f"Error with Update: {e}\nTry creating.")
     try:
@@ -82,11 +81,16 @@ def deploy_stack(
 with open(CF_TEMPLATE) as f:
     cf_body = f.read()
 
-for account_id, attr in iselect_accounts("test_accounts.txt").accounts.items():
+# update to iselect_accounts('active_accounts.txt') to run for active accounts.
+acnt_obj = iselect_accounts()
+print(f"Using '{acnt_obj._accounts_file}' file for accounts.")
+
+for account_id, attr in acnt_obj.accounts.items():
     print(account_id, attr)
     session = iselect_session(account_id)
+    client = session.client()
     deploy_stack(
-        session.cf_client,
+        client,
         "security-iam-cloudhealth-role",
         cf_body,
         PARAM,
